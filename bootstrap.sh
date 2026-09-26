@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Update this once the repo is pushed to GitHub, e.g.:
-# https://raw.githubusercontent.com/<you>/mac-base-tools/main
-REPO_URL="https://raw.githubusercontent.com/<you>/mac-base-tools/main"
+REPO_URL="https://raw.githubusercontent.com/joebruchalski/macapps/main"
 
 if ! command -v brew >/dev/null 2>&1; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
