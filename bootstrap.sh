@@ -50,13 +50,14 @@ EOF
 fi
 
 ALIAS_MARKER="# macapps: aliases"
-if ! grep -qF "$ALIAS_MARKER" "$ZSHRC"; then
-  cat >> "$ZSHRC" <<EOF
+if grep -qF "$ALIAS_MARKER" "$ZSHRC"; then
+  sed -i '' '/^# macapps: aliases$/,/^alias ll=/d' "$ZSHRC"
+fi
+cat >> "$ZSHRC" <<EOF
 
 $ALIAS_MARKER
-alias clc='clear && fastfetch'
+alias cls='clear && fastfetch'
 alias ll='ls -asl'
 EOF
-fi
 
 echo "Done. Open a new terminal tab to see the banner."
