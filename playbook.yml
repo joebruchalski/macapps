@@ -1,0 +1,59 @@
+- name: Base CLI tool list (macOS)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    homebrew_packages:
+      - btop
+      - inxi          # hardware/system report; less complete on macOS than Linux
+      - nmap
+      - mtr
+      - iperf3
+      - netcat        # GNU netcat; macOS ships BSD nc by default, flags differ
+      - arp-scan       # needs sudo on macOS to send raw ARP requests
+      - tree
+      - fzf
+      - iproute2mac   # provides a Linux-style `ip` command wrapper on macOS
+      - fastfetch     # system-info startup banner
+
+  tasks:
+    - name: Ensure Homebrew packages are installed
+      community.general.homebrew:
+        name: "{{ homebrew_packages }}"
+        state: present
+        update_homebrew: true
+
+    - name: Install fzf key bindings and fuzzy completion for zsh
+      ansible.builtin.shell: "$(brew --prefix fzf)/install --all --no-bash --no-fish --no-update-rc"
+      args:
+        creates: "{{ lookup('env', 'HOME') }}/.fzf.zsh"
+
+    - name: Ensure fastfetch config directory exists
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/.config/fastfetch"
+        state: directory
+        mode: "0755"
+
+    - name: Deploy fastfetch config (banner shown on shell startup)
+      ansible.builtin.copy:
+        src: files/fastfetch-config.jsonc
+        dest: "{{ lookup('env', 'HOME') }}/.config/fastfetch/config.jsonc"
+        mode: "0644"
+
+    - name: Ensure .zshrc exists
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/.zshrc"
+        state: touch
+        mode: "0644"
+        access_time: preserve
+        modification_time: preserve
+
+    - name: Add fastfetch startup banner to .zshrc
+      ansible.builtin.blockinfile:
+        path: "{{ lookup('env', 'HOME') }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - fastfetch banner"
+        block: |
+          if [[ $- == *i* ]] && command -v fastfetch >/dev/null 2>&1; then
+            fastfetch
+          fi

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "auto"
+  },
+  "display": {
+    "separator": " -> "
+  },
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    {
+      "type": "command",
+      "key": "Updates",
+      "text": "c=$(brew outdated 2>/dev/null | wc -l | tr -d ' '); echo \"$c package(s) can be upgraded\""
+    },
+    {
+      "type": "command",
+      "key": "Containers",
+      "text": "if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then echo \"$(docker ps -q | wc -l | tr -d ' ') running / $(docker ps -aq | wc -l | tr -d ' ') total\"; else echo \"docker not installed\"; fi"
+    },
+    {
+      "type": "command",
+      "key": "VMs",
+      "text": "if command -v multipass >/dev/null 2>&1; then r=$(multipass list --format csv 2>/dev/null | tail -n +2); t=$(echo \"$r\" | grep -c .); run=$(echo \"$r\" | grep -c ',Running,'); echo \"$run running / $t total\"; else echo \"multipass not installed\"; fi"
+    },
+    "shell",
+    "terminal",
+    "cpu",
+    "gpu",
+    "memory",
+    "disk",
+    "localip",
+    "battery",
+    "break",
+    "colors"
+  ]
+}
