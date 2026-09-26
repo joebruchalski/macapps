@@ -1,7 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="https://raw.githubusercontent.com/joebruchalski/macapps/main"
+REPO_URL="https://github.com/joebruchalski/macapps/raw/main"
+
+PACKAGES=(
+  btop
+  inxi
+  nmap
+  mtr
+  iperf3
+  netcat
+  arp-scan
+  tree
+  fzf
+  iproute2mac
+  fastfetch
+)
 
 if ! command -v brew >/dev/null 2>&1; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -9,19 +23,30 @@ fi
 
 eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
 
-if ! command -v ansible-playbook >/dev/null 2>&1; then
-  brew install ansible
+brew install "${PACKAGES[@]}"
+
+"$(brew --prefix fzf)/install" --all --no-bash --no-fish --no-update-rc
+
+mkdir -p "$HOME/.config/fastfetch"
+curl -fsSL "$REPO_URL/files/fastfetch-config.jsonc" -o "$HOME/.config/fastfetch/config.jsonc"
+
+ZSHRC="$HOME/.zshrc"
+touch "$ZSHRC"
+
+# clean up an old ansible-managed banner block from a previous version of this script
+if grep -q "BEGIN ANSIBLE MANAGED BLOCK - fastfetch banner" "$ZSHRC"; then
+  sed -i '' '/# BEGIN ANSIBLE MANAGED BLOCK - fastfetch banner/,/# END ANSIBLE MANAGED BLOCK - fastfetch banner/d' "$ZSHRC"
 fi
 
-WORKDIR="$(mktemp -d)"
-trap 'rm -rf "$WORKDIR"' EXIT
+MARKER="# macapps: fastfetch banner"
+if ! grep -qF "$MARKER" "$ZSHRC"; then
+  cat >> "$ZSHRC" <<EOF
 
-mkdir -p "$WORKDIR/files"
-curl -fsSL "$REPO_URL/ansible.cfg" -o "$WORKDIR/ansible.cfg"
-curl -fsSL "$REPO_URL/playbook.yml" -o "$WORKDIR/playbook.yml"
-curl -fsSL "$REPO_URL/requirements.yml" -o "$WORKDIR/requirements.yml"
-curl -fsSL "$REPO_URL/files/fastfetch-config.jsonc" -o "$WORKDIR/files/fastfetch-config.jsonc"
+$MARKER
+if [[ \$- == *i* ]] && command -v fastfetch >/dev/null 2>&1; then
+  fastfetch
+fi
+EOF
+fi
 
-cd "$WORKDIR"
-ansible-galaxy collection install -r requirements.yml
-ansible-playbook playbook.yml
+echo "Done. Open a new terminal tab to see the banner."
